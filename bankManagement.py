@@ -10,7 +10,7 @@ def accountLogin():
     def checkNopen():
         acno=tb1.get()
         if acno == '12345':
-            accountWindow()
+            accountWindow(acno)
         else:
             closeWindow()
             global root
