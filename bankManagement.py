@@ -47,16 +47,16 @@ def accountLogin():
 
     root.mainloop()
 #--------------------------------------------------------------------------------------------------------------------    
-def accountWindow():
+def accountWindow(acno):
     closeWindow()
     
     global root
     root = tk.Tk()  # Creating a window with vatiable name root
     root.geometry('1400x500')    # setting size of window
     root.configure(bg='#b3fff5')
-    root.title("ACCOUNT") #adding Title to a program
+    root.title("ACCOUNT :"+acno) #adding Title to a program
 
-    label1=tk.Label(root,text="ACCOUNT",font=('Times New Roman',36),bg='#b3fff5') # defining Label
+    label1=tk.Label(root,text="ACCOUNT :"+acno,font=('Times New Roman',36),bg='#b3fff5') # defining Label
     label1.pack(padx=20,pady=40)
 
     button1 = tk.Button(root,text='Withdraw',font=('Ariel',16),width='20',bg='White',)
