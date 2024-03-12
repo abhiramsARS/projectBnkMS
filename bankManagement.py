@@ -22,8 +22,12 @@ def accountLogin():
             label1=tk.Label(root,text="Account Unable to find",font=('Times New Roman',36),fg='red',bg='#fae1e1') # defining Label
             label1.pack()
 
-            button3 = tk.Button(root,text='Okay',font=('Ariel',16),width='20',bg='White',command=main)
+            button3 = tk.Button(root,text='Try Again',font=('Ariel',16),width='20',bg='White',command=accountLogin)
+            button4 = tk.Button(root,text='Okay',font=('Ariel',16),width='20',bg='White',command=main)
+                      
+            
             button3.pack(pady=20)
+            button4.pack(pady=20)
 
         
     closeWindow()
@@ -40,9 +44,9 @@ def accountLogin():
     tb1.pack(padx=20)
        
     button1 = tk.Button(root,text='Login',font=('Ariel',16),width='20',bg='White',command=checkNopen)
-    button1.pack(pady=20)
-
     button2 = tk.Button(root,text='back',font=('Ariel',16),width='20',bg='red',command=main)
+    
+    button1.pack(pady=20)  
     button2.pack(pady=20)
 
     root.mainloop()
@@ -115,8 +119,11 @@ def adminAuthentication():
             label1=tk.Label(root,text="Invalied Password",font=('Times New Roman',36),fg='red',bg='#fae1e1') # defining Label
             label1.pack()
 
-            button3 = tk.Button(root,text='Okay',font=('Ariel',16),width='20',bg='White',command=main)
+            button3 = tk.Button(root,text='Try Again',font=('Ariel',16),width='20',bg='White',command=accountLogin)
+            button4 = tk.Button(root,text='Okay',font=('Ariel',16),width='20',bg='White',command=main)
+            
             button3.pack(pady=20)
+            button4.pack(pady=20)
 
     
     global root
