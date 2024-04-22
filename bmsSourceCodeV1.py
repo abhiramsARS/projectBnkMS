@@ -176,7 +176,7 @@ def accountWindow(acdet):
 def adminAuthentication():
         
     def checkNopen():
-        adpwd='administrator' #tb1.get()
+        adpwd=tb1.get()
         if adpwd == 'administrator':
             adminWindow()
         else:
