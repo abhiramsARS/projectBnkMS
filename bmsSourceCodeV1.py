@@ -3,6 +3,8 @@
 #####################################################################################################################
 import tkinter as tk    #importing module
 import mysql.connector
+import pickle
+from cryptography.fernet import Fernet
 
 #####################################################################################################################
 
@@ -10,6 +12,7 @@ import mysql.connector
 def closeWindow():
     root.destroy()
 #====================================================================================================================
+
 def errorWindow(typ):
     closeWindow()
     global root
@@ -25,11 +28,33 @@ def errorWindow(typ):
     button3.pack(pady=20)
     
 #====================================================================================================================
+def importPasswords():
+    global pwd_dict
+    pwd_lst=[]
+    with open('datakey.bin','rb') as f1:
+        key=pickle.load(f1)
+    cipher = Fernet(key)
+
+    with open('passwords.bin','rb') as f2:
+        retfiles=pickle.load(f2)
+    
+    pwd_dict={"admin_pwd":retfiles[0] ,"database_pwd":retfiles[1] ,"super_password":retfiles[2] }
+
+    for i in retfiles:
+        i=cipher.decrypt(i)
+        pwd_lst.append(i)
+        
+    pwd_dict={"admin_pwd":pwd_lst[0].decode('utf-8') ,"database_pwd":pwd_lst[1].decode('utf-8') ,"super_password":pwd_lst[2].decode('utf-8') }
+    
+#====================================================================================================================
 def root():
+    importPasswords()
     try:
         global csr
-        mydb=mysql.connector.connect(host="localhost",user="root",passwd="arsmysql",database='bankms')
-        csr=mydb.cursor()
+        global db
+        db=mysql.connector.connect(host="localhost",user="root",passwd=pwd_dict['database_pwd'],database='bankms')
+        csr=db.cursor()
+        
         main()
         
     except:
@@ -137,13 +162,17 @@ def accountLogin():
     root.configure(bg='#9b9c98')
     root.title("ACCOUNT Log-in") #adding Title to a program
     label1=tk.Label(root,text="Account Log-in",font=('Times New Roman',36),bg='#9b9c98') # defining Label
-    label1.pack(padx=20,pady=40)   #calling label Wihout padding
 
-    tb1=tk.Entry(root,width='40',font=('Ariel',24))  
+    frame=tk.Frame(root)
+    label2=tk.Label(frame,text="BAC-",font=('Times New Roman',24),bg='#9b9c98')    
+    tb1=tk.Entry(frame,width='40',font=('Ariel',24))  
     button1 = tk.Button(root,text='Login',font=('Ariel',16),width='20',bg='#9ea9f7',command=checkNopen)
     button2 = tk.Button(root,text='back',font=('Ariel',16),width='20',bg='red',command=main)
 
-    tb1.pack(padx=20)
+    label1.pack(padx=20,pady=40)   #calling label Wihout padding
+    frame.pack(side=tk.TOP)
+    label2.grid(row=0,column=0)
+    tb1.grid(row=0,column=1)
     button1.pack(pady=20)  
     button2.pack(pady=20)
 
@@ -177,7 +206,7 @@ def adminAuthentication():
         
     def checkNopen():
         adpwd=tb1.get()
-        if adpwd == 'administrator':
+        if adpwd == pwd_dict['admin_pwd']:
             adminWindow()
         else:
             closeWindow()
@@ -226,7 +255,7 @@ def adminWindow():
 
     label1=tk.Label(root,text="ADMINISTRATOR",font=('Times New Roman',36),bg='#9b9c98') # defining Label
     button1 = tk.Button(root,text='Find Account',font=('Ariel',16),width='20',bg='#9ea9f7',command=admin_findAccount)
-    button2 = tk.Button(root,text='View Account Holder',font=('Ariel',16),width='20',bg='#9ea9f7')
+    button2 = tk.Button(root,text='Create Account',font=('Ariel',16),width='20',bg='#9ea9f7',command=admin_CreateAccount)
     button3 = tk.Button(root,text='Edit Account',font=('Ariel',16),width='20',bg='#9ea9f7',)
     button4 = tk.Button(root,text='Back',font=('Ariel',16),width='20',bg='red',command=main)
 
@@ -317,8 +346,7 @@ def admin_findAccount():
         try:
             acpn=int(acpn)
         except:
-            errorWindow('Invalid Mobile Number Format')
-        print(acpn)    
+            errorWindow('Invalid Mobile Number Format')   
         acs,acdet=[],[]
         csr.execute("select ph_no from account")
         for i in csr:
@@ -369,6 +397,79 @@ def admin_findAccount():
     button3.pack(padx=20,pady=5)
     
     root.mainloop()
+#====================================================================================================================
+    
+def admin_CreateAccount():
+    def createAC():
+        name=tb1.get()
+        phno=tb2.get()
+        csr.execute("select max(ac_no) from account")
+        for i in csr:
+            nacno=i[0][4:]
+            nacno=int(nacno)+1
+            
+        phnol=[]    
+        csr.execute("select ph_no from account")
+        for i in csr:
+            phnol.append(i[0])
+            
+        try:    
+            if int(phno) in phnol:
+                errorWindow("Phone Number Already Exist")
+                
+            elif len(phno)!=10:
+                errorWindow("Invalied Phone Number")
+
+            else:
+                csr.execute('insert into account values(\"BAC-'+str(nacno)+"\",\""+name+"\","+phno+",0,\"O\",curdate())")
+                db.commit()
+                closeWindow()        
+                global root
+                root = tk.Tk()  # Creating a window with vatiable name root
+                root.geometry('1000x600')    # setting size of window
+                root.configure(bg='#9b9c98')
+                root.title("ADMINISTRATOR : Account Created") #adding Title to a program
+
+                label1=tk.Label(root,text="Account Created",font=('Times New Roman',36),bg='#9b9c98') # defining Label
+                label2=tk.Label(root,text="A/C No. BAC-:"+str(nacno),font=('Times New Roman',36),bg='#9b9c98') # defining Label
+                button1 = tk.Button(root,text='Create Account',font=('Ariel',16),width='20',bg='#9ea9f7',command=adminWindow)
+
+                label1.pack(padx=20,pady=40)
+                label2.pack(padx=20,pady=40)
+                button1.pack(pady=5)
+
+        except:
+            errorWindow("Cannot add Account")
+
+        
+        
+    closeWindow()        
+    global root
+    root = tk.Tk()  # Creating a window with vatiable name root
+    root.geometry('1000x600')    # setting size of window
+    root.configure(bg='#9b9c98')
+    root.title("ADMINISTRATOR : Create Account") #adding Title to a program
+
+    label0=tk.Label(root,text="Create Account",font=('Times New Roman',36),bg='#9b9c98') # defining Label
+
+    frame=tk.Frame(root)
+    label1=tk.Label(frame,text=" Account Holder Name  :",font=('Times New Roman',18),bg='#9b9c98')
+    tb1=tk.Entry(frame,width='40',font=('Ariel',18))
+    label2=tk.Label(frame,text=" Account Phone Number :",font=('Times New Roman',18),bg='#9b9c98')
+    tb2=tk.Entry(frame,width='40',font=('Ariel',18))
+    button1 = tk.Button(root,text='Create Account',font=('Ariel',16),width='20',bg='#9ea9f7',command=createAC)
+    
+    label0.pack(padx=20,pady=40)
+
+    frame.pack(side=tk.TOP)
+    label1.grid(row=0,column=0)
+    tb1.grid(row=0,column=1)
+    label2.grid(row=1,column=0)
+    tb2.grid(row=1,column=1)
+    button1.pack(pady=5)
+    
+    root.mainloop()
+    
 #####################################################################################################################
         
 root()
