@@ -37,8 +37,6 @@ def importPasswords():
 
     with open('passwords.bin','rb') as f2:
         retfiles=pickle.load(f2)
-    
-    pwd_dict={"admin_pwd":retfiles[0] ,"database_pwd":retfiles[1] ,"super_password":retfiles[2] }
 
     for i in retfiles:
         i=cipher.decrypt(i)
