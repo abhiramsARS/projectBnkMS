@@ -5,6 +5,7 @@ import tkinter as tk    #importing module
 import mysql.connector
 import pickle
 from cryptography.fernet import Fernet
+from tabulate import tabulate
 
 #####################################################################################################################
 
@@ -13,7 +14,15 @@ def closeWindow():
     root.destroy()
 #====================================================================================================================
 
-def errorWindow(typ):
+def errorWindow(typ,back=1):
+    def back_to():
+        if back==1:
+            main()
+        elif back==2:
+            adminWindow()
+        else:
+            main()
+        
     closeWindow()
     global root
     root = tk.Tk()  # Creating a window with vatiable name root
@@ -22,7 +31,7 @@ def errorWindow(typ):
     root.title("NOT FOUND") #adding Title to a program
             
     label1=tk.Label(root,text=typ,font=('Times New Roman',36),fg='red',bg='#fae1e1') # defining Label
-    button3 = tk.Button(root,text='okay',font=('Ariel',16),width='20',bg='white',command=main)
+    button3 = tk.Button(root,text='okay',font=('Ariel',16),width='20',bg='white',command=back_to)
     
     label1.pack()    
     button3.pack(pady=20)
@@ -43,6 +52,7 @@ def importPasswords():
         pwd_lst.append(i)
         
     pwd_dict={"admin_pwd":pwd_lst[0].decode('utf-8') ,"database_pwd":pwd_lst[1].decode('utf-8') ,"super_password":pwd_lst[2].decode('utf-8') }
+    pwd_lst.clear()
     
 #====================================================================================================================
 def root():
@@ -108,19 +118,15 @@ def accountLogin():
             root.configure(bg='#9b9c98')
             root.title("Account Brief") #adding Title to a program
 
-            label1=tk.Label(root,text="Account Number -"+str(acdet[0]),font=('Ariel',18),bg='#9b9c98')# defining Label
-            label2=tk.Label(root,text="Account Holder -"+str(acdet[1]),font=('Ariel',18),bg='#9b9c98')
-            label3=tk.Label(root,text="Phone Number   -"+str(acdet[2]),font=('Ariel',18),bg='#9b9c98')
-            label4=tk.Label(root,text="A/C Balance    -"+str(acdet[3]),font=('Ariel',18),bg='#9b9c98')
-            label5=tk.Label(root,text="A/C Status     -"+str(acdet[4]),font=('Ariel',18),bg='#9b9c98')
+            table_lst=(("Account Number",str(acdet[0])),("Account Holder",str(acdet[1])),("Phone Number",str(acdet[2])),
+                       ("A/C Balance",str(acdet[3])),("A/C Status",str(acdet[4])),)
+            table=tabulate(table_lst,tablefmt="grid")
+
+            label1=tk.Label(root,text=table,font=('Courier new',12),bg='#9b9c98')# defining Label
             button1 = tk.Button(root,text='Open Account',font=('Ariel',16),width='20',bg='white',command=acCall)
             button2 = tk.Button(root,text='Wrong Account',font=('Ariel',16),width='20',bg='white',command=main)
             
             label1.pack(padx=0,pady=0)
-            label2.pack(padx=0,pady=0)
-            label3.pack(padx=0,pady=0)
-            label4.pack(padx=0,pady=0)
-            label5.pack(padx=0,pady=0)
             button1.pack(pady=20)
             button2.pack(pady=20)
             
@@ -131,26 +137,15 @@ def accountLogin():
         for i in csr:
             acs.append(i[0])   
         if 'BAC-'+acno in acs:
+            acs.clear()
             csr.execute("select * from account where ac_no=\"bac-"+acno+"\"")
             for i in csr:
                 acdet=i
             accountDisplay(acdet)           
             
         else:
-            closeWindow()
-            global root
-            root = tk.Tk()  # Creating a window with vatiable name root
-            root.geometry('500x500')    # setting size of window
-            root.configure(bg='#fae1e1')
-            root.title("NOT FOUND") #adding Title to a program
             
-            label1=tk.Label(root,text="Account Unable to find",font=('Times New Roman',36),fg='red',bg='#fae1e1') # defining Label
-            button3 = tk.Button(root,text='Try Again',font=('Ariel',16),width='20',bg='white',command=accountLogin)
-            button4 = tk.Button(root,text='Okay',font=('Ariel',16),width='20',bg='white',command=main)
-                      
-            label1.pack()
-            button3.pack(pady=20)
-            button4.pack(pady=20)
+            errorWindow("Account Unable to find")
             
     closeWindow()
     
@@ -203,7 +198,7 @@ def accountWindow(acdet):
 def adminAuthentication():
         
     def checkNopen():
-        adpwd=tb1.get()
+        adpwd='administrator' #tb1.get()
         if adpwd == pwd_dict['admin_pwd']:
             adminWindow()
         else:
@@ -273,72 +268,57 @@ def admin_findAccount():
         csr.execute("select ac_no from account")
         for i in csr:
             acs.append(i[0])
-        if 'BAC-'+acno in acs:
-            csr.execute("select * from account where ac_no=\"bac-"+acno+"\"")
-            for i in csr:
-                acdet=i
-            closeWindow()
-            global root
-            root = tk.Tk()  # Creating a window with vatiable name root
-            root.geometry('1000x600')    # setting size of window
-            root.configure(bg='#9b9c98')
-            root.title("ADMINISTRATOR : Find Account") #adding Title to a program
-            label1=tk.Label(root,text="Account Number -"+str(acdet[0]),font=('Ariel',18),bg='#9b9c98')# defining Label
-            label2=tk.Label(root,text="Account Holder -"+str(acdet[1]),font=('Ariel',18),bg='#9b9c98')
-            label3=tk.Label(root,text="Phone Number   -"+str(acdet[2]),font=('Ariel',18),bg='#9b9c98')
-            label4=tk.Label(root,text="A/C Balance    -"+str(acdet[3]),font=('Ariel',18),bg='#9b9c98')
-            label5=tk.Label(root,text="A/C Status     -"+str(acdet[4]),font=('Ariel',18),bg='#9b9c98')
-            label6=tk.Label(root,text="A/C date       -"+str(acdet[5]),font=('Ariel',18),bg='#9b9c98')
-            button1 = tk.Button(root,text='Back',font=('Ariel',16),width='20',bg='#9ea9f7',command=adminWindow)
-            
-            label1.pack(padx=20,pady=10)
-            label2.pack(padx=20,pady=10)
-            label3.pack(padx=20,pady=10)
-            label4.pack(padx=20,pady=10)
-            label5.pack(padx=20,pady=10)
-            label6.pack(padx=20,pady=10)
-            button1.pack(pady=5)
+        csr.execute("select * from account where ac_no=\"bac-"+acno+"\"")
+        for i in csr:
+            acdet=i
+        closeWindow()
+        global root
+        root = tk.Tk()  # Creating a window with vatiable name root
+        root.geometry('1000x600')    # setting size of window
+        root.configure(bg='#9b9c98')
+        root.title("ADMINISTRATOR : Find Account") #adding Title to a program
 
-            root.mainloop()
+        table=tabulate((acdet,),headers=["Account Number","Account Holder","Phone Number","A/C Balance","A/C Status","A/C date"],tablefmt="grid")
 
-        else:
-            errorWindow('Account Number Not Found') 
-            
+        label1=tk.Label(root,text="Accounts Found :-",font=('Courier New',10),bg='#9b9c98')# defining Label
+        label2=tk.Label(root,text=table,font=('Courier New',10),bg='#9b9c98')# defining Label
+        button1 = tk.Button(root,text='Back',font=('Ariel',16),width='20',bg='#9ea9f7',command=adminWindow)
+        
+        label1.pack(padx=20,pady=10)
+        label2.pack(padx=20,pady=10)
+        button1.pack(pady=5)
 
-            
+        root.mainloop()              
         
     def db_searchName():
-        achn=tb1.get()
+        achn=(tb1.get()).lower()
         acs,acdet=[],[]
         csr.execute("select ac_holder from account")
         for i in csr:
             acs.append(i[0].lower())
-        if achn.lower() in acs:
-            csr.execute("select ac_no from account where ac_holder like \"%"+achn+"%\"")
-            for i in csr:
-                acdet.append(i[0])
-            closeWindow()
-            global root
-            root = tk.Tk()  # Creating a window with vatiable name root
-            root.geometry('1000x600')    # setting size of window
-            root.configure(bg='#9b9c98')
-            
-            for j in acdet:
-                root.title("ADMINISTRATOR : Find Account") #adding Title to a program
-                label1=tk.Label(root,text="Account Number -"+str(j),font=('Ariel',18),bg='#9b9c98')# defining Label
-                label7=tk.Label(root,text="="*25,font=('Ariel',18),bg='#9b9c98')
 
-                label1.pack(padx=0,pady=0)
-                label7.pack(padx=0,pady=0)
+        csr.execute("select * from account where ac_holder like \"%"+achn+"%\"")
+        for i in csr:
+            acdet.append(i)
+        closeWindow()
+        global root
+        root = tk.Tk()  # Creating a window with vatiable name root
+        root.geometry('1000x600')    # setting size of window
+        root.configure(bg='#9b9c98')
+        root.title("ADMINISTRATOR : Find Account")#adding Title to a program
+        
+        table=tabulate(acdet,headers=["Account Number","Account Holder","Phone Number","A/C Balance","A/C Status","A/C date"],tablefmt="grid")
 
-            button1 = tk.Button(root,text='Back',font=('Ariel',16),width='20',bg='#9ea9f7',command=adminWindow)
-            button1.pack(pady=5)
+        label1=tk.Label(root,text="Accounts Found :-",font=('Courier New',10),bg='#9b9c98')# defining Label    
+        label2=tk.Label(root,text=table,font=('Courier New',10),bg='#9b9c98')# defining Label
+        button1 = tk.Button(root,text='Back',font=('Ariel',16),width='20',bg='#9ea9f7',command=adminWindow)
 
-            root.mainloop()
-            
-        else:
-            errorWindow('Account Name Not Found')
-            
+        label1.pack(padx=0,pady=0)
+        label2.pack(padx=0,pady=0)
+        button1.pack(pady=5)
+
+        root.mainloop()
+
     def db_searchPhNo():
         acpn=tb1.get()
         try:
@@ -349,31 +329,28 @@ def admin_findAccount():
         csr.execute("select ph_no from account")
         for i in csr:
             acs.append(i[0])
-        if acpn in acs:
-            csr.execute("select ac_no from account where ph_no = "+str(acpn))
-            for i in csr:
-                acdet.append(i[0])
-            closeWindow()
-            global root
-            root = tk.Tk()  # Creating a window with vatiable name root
-            root.geometry('1000x600')    # setting size of window
-            root.configure(bg='#9b9c98')
+
+        csr.execute("select * from account where ph_no = "+str(acpn))
+        for i in csr:
+            acdet.append(i)
+        closeWindow()
+        global root
+        root = tk.Tk()  # Creating a window with vatiable name root
+        root.geometry('1000x600')    # setting size of window
+        root.configure(bg='#9b9c98')
+
+        table=tabulate(acdet,headers=["Account Number","Account Holder","Phone Number","A/C Balance","A/C Status","A/C date"],tablefmt="grid")
+        label1=tk.Label(root,text="Accounts Found :-",font=('Courier New',10),bg='#9b9c98')# defining Label    
+        label2=tk.Label(root,text=table,font=('Courier New',10),bg='#9b9c98')# defining Label
+        button1 = tk.Button(root,text='Back',font=('Ariel',16),width='20',bg='#9ea9f7',command=adminWindow)
+
+        label1.pack(padx=0,pady=0)
+        label2.pack(padx=0,pady=0)
+        button1.pack(pady=5)
+
+        root.mainloop()
             
-            for j in acdet:
-                root.title("ADMINISTRATOR : Find Account") #adding Title to a program
-                label1=tk.Label(root,text="Account Number -"+str(j),font=('Ariel',18),bg='#9b9c98')# defining Label
-                label7=tk.Label(root,text="="*25,font=('Ariel',18),bg='#9b9c98')
 
-                label1.pack(padx=0,pady=0)
-                label7.pack(padx=0,pady=0)
-
-            button1 = tk.Button(root,text='Back',font=('Ariel',16),width='20',bg='#9ea9f7',command=adminWindow)
-            button1.pack(pady=5)
-
-            root.mainloop()
-            
-        else:
-            errorWindow('Phone Number Not Found')
             
     closeWindow()        
     global root
@@ -386,7 +363,7 @@ def admin_findAccount():
     tb1=tk.Entry(root,width='40',font=('Ariel',24))
     button1 = tk.Button(root,text='Find Account Number',font=('Ariel',16),width='20',bg='#9ea9f7',command=db_searchAcNo)
     button2 = tk.Button(root,text='Find Account Name',font=('Ariel',16),width='20',bg='#9ea9f7',command=db_searchName)
-    button3 = tk.Button(root,text='Find Account Phone Number',font=('Ariel',16),width='20',bg='#9ea9f7',command=db_searchPhNo)
+    button3 = tk.Button(root,text='Find Account Phone Number',font=('Ariel',16),width='30',bg='#9ea9f7',command=db_searchPhNo)
     
     label1.pack(padx=20,pady=40)
     tb1.pack(padx=20,pady=20)
@@ -437,7 +414,7 @@ def admin_CreateAccount():
                 button1.pack(pady=5)
 
         except:
-            errorWindow("Cannot add Account")
+            errorWindow("Cannot add Account",2)
 
         
         
@@ -456,6 +433,7 @@ def admin_CreateAccount():
     label2=tk.Label(frame,text=" Account Phone Number :",font=('Times New Roman',18),bg='#9b9c98')
     tb2=tk.Entry(frame,width='40',font=('Ariel',18))
     button1 = tk.Button(root,text='Create Account',font=('Ariel',16),width='20',bg='#9ea9f7',command=createAC)
+    button2 = tk.Button(root,text='Back',font=('Ariel',16),width='20',bg='#9ea9f7',command=adminWindow)
     
     label0.pack(padx=20,pady=40)
 
@@ -465,6 +443,7 @@ def admin_CreateAccount():
     label2.grid(row=1,column=0)
     tb2.grid(row=1,column=1)
     button1.pack(pady=5)
+    button2.pack(pady=5)
     
     root.mainloop()
     
