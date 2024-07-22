@@ -1,25 +1,28 @@
 # Project-BnkMS
 
 #####################################################################################################################
-import tkinter as tk    #importing module
-import mysql.connector
-import pickle
-from cryptography.fernet import Fernet
-from tabulate import tabulate
+import tkinter as tk     #importing TKINTER module for : Creating User friendly Graphical unser interface environment
+import mysql.connector     #importing MYSQL module for : Connecting to MySQL database for efficent Data management
+import pickle     #importing PIKCLE module for : Reading from binary(.bin) files
+from cryptography.fernet import Fernet     #importing CRYPTOGRAPHY module for : Decrypting hashed password 
+from tabulate import tabulate     #importing TABULATE module for : Tabular Representation of data
 
 #####################################################################################################################
 
 
 def closeWindow():
     root.destroy()
+
 #====================================================================================================================
 
 def errorWindow(typ,back=1):
     def back_to():
-        if back==1:
+        if back==1:  # back to Main Window
             main()
-        elif back==2:
+        elif back==2:  # back to Admin Window
             adminWindow()
+        elif back==3:  # back to account login Window
+            accountLogin()
         else:
             main()
         
@@ -28,7 +31,7 @@ def errorWindow(typ,back=1):
     root = tk.Tk()  # Creating a window with vatiable name root
     root.geometry('500x500')    # setting size of window
     root.configure(bg='#fae1e1')
-    root.title("NOT FOUND") #adding Title to a program
+    root.title("Error") #adding Title to a program
             
     label1=tk.Label(root,text=typ,font=('Times New Roman',36),fg='red',bg='#fae1e1') # defining Label
     button3 = tk.Button(root,text='okay',font=('Ariel',16),width='20',bg='white',command=back_to)
@@ -38,31 +41,31 @@ def errorWindow(typ,back=1):
     
 #====================================================================================================================
 def importPasswords():
-    global pwd_dict
-    pwd_lst=[]
-    with open('datakey.bin','rb') as f1:
+    global pwd_dict    # Password Dictionary
+    Tpwd_lst=[]  # Temporary Password List
+    with open('datakey.bin','rb') as f1:              # Extracting encryption key
         key=pickle.load(f1)
     cipher = Fernet(key)
 
-    with open('passwords.bin','rb') as f2:
-        retfiles=pickle.load(f2)
+    with open('passwords.bin','rb') as f2:            # Extracting Hashed Passwords
+        retfiles=pickle.load(f2)   # Retrieved data from Files
 
-    for i in retfiles:
+    for i in retfiles:                                # Data Decrytion  
         i=cipher.decrypt(i)
-        pwd_lst.append(i)
+        Tpwd_lst.append(i)
         
-    pwd_dict={"admin_pwd":pwd_lst[0].decode('utf-8') ,"database_pwd":pwd_lst[1].decode('utf-8') ,"super_password":pwd_lst[2].decode('utf-8') }
+    pwd_dict={"admin_pwd":Tpwd_lst[0].decode('utf-8') ,"database_pwd":Tpwd_lst[1].decode('utf-8') ,"super_password":Tpwd_lst[2].decode('utf-8') }
     pwd_lst.clear()
     
 #====================================================================================================================
 def root():
     importPasswords()
     try:
+        # Connecting MySQL Server to Python.
         global csr
         global db
-        db=mysql.connector.connect(host="localhost",user="root",passwd=pwd_dict['database_pwd'],database='bankms')
-        csr=db.cursor()
-        
+        db=mysql.connector.connect(host="localhost",user="root",passwd=pwd_dict['database_pwd'],database='bankms')  # Database Object
+        csr=db.cursor() # Cursor Object
         main()
         
     except:
@@ -110,7 +113,8 @@ def accountLogin():
     def accountDisplay(acdet):
             
             def acCall():
-                accountWindow(acdet)
+                accountWindow(acdet)  
+
             closeWindow()
             global root    
             root = tk.Tk()  # Creating a window with vatiable name root
@@ -131,7 +135,7 @@ def accountLogin():
             button2.pack(pady=20)
             
     def checkNopen():
-        acno=tb1.get()
+        acno=tb1.get()  # Variable : Account Number
         acs=[]
         csr.execute("select ac_no from account")
         for i in csr:
@@ -140,7 +144,7 @@ def accountLogin():
             acs.clear()
             csr.execute("select * from account where ac_no=\"bac-"+acno+"\"")
             for i in csr:
-                acdet=i
+                acdet=i  # Variable : Account Details
             accountDisplay(acdet)           
             
         else:
@@ -172,7 +176,13 @@ def accountLogin():
     root.mainloop()
 #====================================================================================================================   
 def accountWindow(acdet):       
-    
+
+    def withdraw():
+        acWithdraw(acdet)
+
+    def deposit():
+        acDeposit(acdet)
+        
     closeWindow()
     global root
     root = tk.Tk()  # Creating a window with vatiable name root
@@ -183,8 +193,8 @@ def accountWindow(acdet):
     label1=tk.Label(root,text="ACCOUNT :"+acdet[0],font=('Times New Roman',36),bg='#9b9c98') # defining Label
     label1.pack(padx=20,pady=40)
 
-    button1 = tk.Button(root,text='Withdraw',font=('Ariel',16),width='20',bg='#9ea9f7',)
-    button2 = tk.Button(root,text='Deposit',font=('Ariel',16),width='20',bg='#9ea9f7',)
+    button1 = tk.Button(root,text='Withdraw',font=('Ariel',16),width='20',bg='#9ea9f7',command=withdraw)
+    button2 = tk.Button(root,text='Deposit',font=('Ariel',16),width='20',bg='#9ea9f7',command=deposit)
     button3 = tk.Button(root,text='Check Balance',font=('Ariel',16),width='20',bg='#9ea9f7',)
     button4 = tk.Button(root,text='Back',font=('Ariel',16),width='20',bg='red',command=main)
 
@@ -194,6 +204,167 @@ def accountWindow(acdet):
     button4.pack(pady=5)
 
     root.mainloop()
+
+#====================================================================================================================   
+def acWithdraw(acdet):
+
+    def proceedWithdraw():
+        
+        def dbOperations():
+            mode=tbmode.get() # Variable : transaction Mode 
+            csr.execute("select max(trans_id) from transaction")
+            for i in csr:
+                atid=int(i[0])+1  # Variable : Allocated Transaction ID
+            q1="insert into transaction values (\""+str(atid)+"\",curdate(),\""+acdet[0]+"\",\""+mode+"\","+amt+",\"d\")"
+            q2="update account set ac_balance="+str(acdet[3]-int(amt))+" where ac_no=\""+acdet[0]+"\""
+            csr.execute(q1)
+            csr.execute(q2)            
+            db.commit()
+            q1=q2=0
+
+            csr.execute("select * from transaction where trans_id=\""+str(atid)+"\"")
+            for i in csr :
+                trans_data=i # Variable : Transaction Data
+            global root
+            root = tk.Tk()  # Creating a window with vatiable name root
+            root.geometry('1000x600')    # setting size of window
+            root.configure(bg='#9b9c98')
+            root.title("Completion Window"+acdet[0]) #adding Title to a program
+            
+            label1=tk.Label(root,text="Withdraw Sucess Full"+acdet[0],font=('Times New Roman',16),bg='#9b9c98')
+            table=tabulate((trans_data,),tablefmt="grid")
+            label2=tk.Label(root,text=table,font=('courier new',16),bg='#9b9c98')
+            button1 = tk.Button(root,text='okay',font=('Ariel',16),width='20',bg='#9ea9f7',command=backToACwindow)
+            
+            label1.pack(pady=5)
+            label2.pack(pady=5)
+            button1.pack(pady=5)
+            
+        amt=tbamt.get() # Variable : Amount
+        if acdet[3]>int(amt):
+            closeWindow()
+            global root
+            root = tk.Tk()  # Creating a window with vatiable name root
+            root.geometry('1000x600')    # setting size of window
+            root.configure(bg='#9b9c98')
+            root.title("ACCOUNT WITHDRAW :"+acdet[0]) #adding Title to a program
+            
+            label1=tk.Label(root,text="CONFIRMATION WINDOW :"+acdet[0],font=('Times New Roman',16),bg='#9b9c98')
+
+            tbmode=tk.Entry(root,width='40',font=('Ariel',24))
+            button1 = tk.Button(root,text='Confirm',font=('Ariel',16),width='20',bg='#9ea9f7',command=dbOperations)
+            button2 = tk.Button(root,text='Terminate',font=('Ariel',16),width='20',bg='#9ea9f7',command=main)
+            
+            label1.pack(pady=5)
+            tbmode.pack(pady=5)
+            button1.pack(pady=5)
+            button2.pack(pady=5)
+            
+        else:
+            errorWindow("Insufficent Balance",3)
+
+    def backToACwindow():
+        accountWindow(acdet)
+        
+    closeWindow()
+    global root
+    root = tk.Tk()  # Creating a window with vatiable name root
+    root.geometry('1000x600')    # setting size of window
+    root.configure(bg='#9b9c98')
+    root.title("ACCOUNT WITHDRAW :"+acdet[0]) #adding Title to a program
+
+    label1=tk.Label(root,text="ACCOUNT WITHDRAW :"+acdet[0],font=('Times New Roman',36),bg='#9b9c98') # defining Label
+    label1.pack(padx=20,pady=40)
+
+    label2=tk.Label(root,text="Enter Amount:",font=('Ariel',16),bg='White')
+    tbamt=tk.Entry(root,width='40',font=('Ariel',24))
+    button1 = tk.Button(root,text='Withdraw',font=('Ariel',16),width='20',bg='#9ea9f7',command=proceedWithdraw)
+    button2 = tk.Button(root,text='CANCEL',font=('Ariel',16),width='20',bg='#9ea9f7',command=backToACwindow)
+
+    label2.pack(pady=0)
+    tbamt.pack(pady=10)
+    button1.pack(pady=5)          
+    button2.pack(pady=5)           
+
+    root.mainloop()
+#====================================================================================================================   
+def acDeposit(acdet):
+
+    def proceedWithdraw():
+        
+        def dbOperations():
+            mode=tbmode.get()
+            csr.execute("select max(trans_id) from transaction")
+            for i in csr:
+                atid=int(i[0])+1 # Variable : Allocated Transaction ID
+            q1="insert into transaction values (\""+str(atid)+"\",curdate(),\""+acdet[0]+"\",\""+mode+"\","+amt+",\"c\")"
+            q2="update account set ac_balance="+str(acdet[3]+int(amt))+" where ac_no=\""+acdet[0]+"\""
+            csr.execute(q1)
+            csr.execute(q2)            
+            db.commit()
+            q1=q2=0
+
+            csr.execute("select * from transaction where trans_id=\""+str(atid)+"\"")
+            for i in csr :
+                trans_data=i    # Variable : Transaction data
+            global root
+            root = tk.Tk()  # Creating a window with vatiable name root
+            root.geometry('1000x600')    # setting size of window
+            root.configure(bg='#9b9c98')
+            root.title("Completion Window"+acdet[0]) #adding Title to a program
+            
+            label1=tk.Label(root,text="Transaction Sucess Full"+acdet[0],font=('Times New Roman',16),bg='#9b9c98')
+            table=tabulate((trans_data,),tablefmt="grid")
+            label2=tk.Label(root,text=table,font=('courier new',16),bg='#9b9c98')
+            button1 = tk.Button(root,text='okay',font=('Ariel',16),width='20',bg='#9ea9f7',command=backToACwindow)
+            
+            label1.pack(pady=5)
+            label2.pack(pady=5)
+            button1.pack(pady=5)
+            
+        amt=tbamt.get() # Variable : Amount
+        closeWindow()
+        global root
+        root = tk.Tk()  # Creating a window with vatiable name root
+        root.geometry('1000x600')    # setting size of window
+        root.configure(bg='#9b9c98')
+        root.title("ACCOUNT DEPOSIT :"+acdet[0]) #adding Title to a program
+        
+        label1=tk.Label(root,text="CONFIRMATION WINDOW :"+acdet[0],font=('Times New Roman',16),bg='#9b9c98')
+
+        tbmode=tk.Entry(root,width='40',font=('Ariel',24))
+        button1 = tk.Button(root,text='Confirm',font=('Ariel',16),width='20',bg='#9ea9f7',command=dbOperations)
+        button2 = tk.Button(root,text='Terminate',font=('Ariel',16),width='20',bg='#9ea9f7',command=main)
+        
+        label1.pack(pady=5)
+        tbmode.pack(pady=5)
+        button1.pack(pady=5)
+        button2.pack(pady=5)
+
+    def backToACwindow():
+        accountWindow(acdet)
+        
+    closeWindow()
+    global root
+    root = tk.Tk()  # Creating a window with vatiable name root
+    root.geometry('1000x600')    # setting size of window
+    root.configure(bg='#9b9c98')
+    root.title("ACCOUNT DEPOSIT :"+acdet[0]) #adding Title to a program
+
+    label1=tk.Label(root,text="ACCOUNT DEPOSIT :"+acdet[0],font=('Times New Roman',36),bg='#9b9c98') # defining Label
+    label1.pack(padx=20,pady=40)
+
+    label2=tk.Label(root,text="Enter Amount:",font=('Ariel',16),bg='White')
+    tbamt=tk.Entry(root,width='40',font=('Ariel',24))
+    button1 = tk.Button(root,text='Deposit',font=('Ariel',16),width='20',bg='#9ea9f7',command=proceedWithdraw)
+    button2 = tk.Button(root,text='CANCEL',font=('Ariel',16),width='20',bg='#9ea9f7',command=backToACwindow)
+
+    label2.pack(pady=0)
+    tbamt.pack(pady=10)
+    button1.pack(pady=5)          
+    button2.pack(pady=5)           
+
+    root.mainloop()    
 #====================================================================================================================  
 def adminAuthentication():
         
@@ -264,10 +435,11 @@ def admin_findAccount():
     
     def db_searchAcNo():
         acno=tb1.get()
-        acs=[]
+        acs, acdet=[],[]
         csr.execute("select ac_no from account")
         for i in csr:
             acs.append(i[0])
+            
         csr.execute("select * from account where ac_no=\"bac-"+acno+"\"")
         for i in csr:
             acdet=i
