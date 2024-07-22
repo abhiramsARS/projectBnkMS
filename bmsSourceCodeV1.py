@@ -1,4 +1,4 @@
-# Project-BnkMS
+# Project : BANK MANAGEMENT SYSTEM [BnkMS]
 
 #####################################################################################################################
 import tkinter as tk     #importing TKINTER module for : Creating User friendly Graphical unser interface environment
