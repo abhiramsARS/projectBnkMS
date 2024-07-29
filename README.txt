@@ -11,5 +11,5 @@ This is a Graphical user interface based program developed in python
     1) bmsSourceCodeV1.py  -> Main Project File.
     2) passwordSettings.py -> Setting or Updating Passwords used in Application.
     3) installSetUp.py -> Setup database using Python and check for missing Packages.
-    5) BankMS_MySQL -> SQL file with database setup queries.
+    5) BankMS_MySQL.sql -> SQL file with database setup queries.
     4) MySQL_Setup_info  -> Database Architecture Blueprint. 
