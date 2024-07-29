@@ -39,7 +39,7 @@ trans_ac varchar(9) not null,trans_method varchar(10) not null,amount integer no
 trans_type varchar(2) not null);""")
 print("Table-2 Created")
 
-csr.execute("""insert into account values("BAC-00001","Test","1234567890",0,'O',curdate());""")
+csr.execute("""insert into account values("BAC-10001","Test","1234567890",0,'O',curdate());""")
 csr.execute("""insert into transaction values("2420001",curdate(),"BAC-00001","deposit",0,"c"); """)
 db.commit()
 
