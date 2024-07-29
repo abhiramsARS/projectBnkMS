@@ -10,4 +10,4 @@ create table transaction(trans_id varchar(8) not null primary key,trns_date date
 
 /* Adding Trial Data to tables */
 insert into account values("BAC-00001","Test","1234567890",0,'O',curdate());
-insert into transaction values("2420001",curdate(),"BAC-00001","deposit",0,"c");
+insert into transaction values("2420001",curdate(),"BAC-10001","deposit",0,"c");
