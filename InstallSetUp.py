@@ -30,17 +30,17 @@ csr.execute("Create Database bankms")
 csr.execute("use bankms")
 print("Database Created")
 
-csr.execute("""create table account(ac_no varchar(9) not null primary key,ac_holder varchar(20) not null,ph_no int not null,
+csr.execute("""create table account(ac_no varchar(9) not null primary key,ac_holder varchar(20) not null,ph_no varchar(12) not null,
 ac_balance int,ac_status varchar(2) not null,ac_date date);""")
 print("Table-1 Created")
 
 csr.execute("""create table transaction(trans_id varchar(8) not null primary key,trns_date date not null,
-trans_ac varchar(9) not null,bnf_ac varchar(9) not null,trans_method varchar(10) not null,amount integer not null ,
+trans_ac varchar(9) not null,trans_method varchar(10) not null,amount integer not null ,
 trans_type varchar(2) not null);""")
 print("Table-2 Created")
 
-csr.execute("""insert into account values("BAC-00001","Test",1234567890,0,'O',curdate());""")
-csr.execute("""insert into transaction values("2420001",curdate(),"BAC-00001","BAC-00001","deposit",0,"c"); """)
+csr.execute("""insert into account values("BAC-00001","Test","1234567890",0,'O',curdate());""")
+csr.execute("""insert into transaction values("2420001",curdate(),"BAC-00001","deposit",0,"c"); """)
 db.commit()
 
 print("Traial Data Added")
@@ -54,7 +54,7 @@ for i in csr:
 
 print("\nChecking for Data retriving")
 
-if(dra[0]=='BAC-00001' and dra[1]=='Test'and dra[2]==1234567890):
+if(dra[0]=='BAC-00001' and dra[1]=='Test'and dra[2]=="1234567890"):
     print("Check-1 : status : SUCESS")
     ts=1
 else:
