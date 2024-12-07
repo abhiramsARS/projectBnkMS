@@ -55,7 +55,15 @@ def importPasswords():
         Tpwd_lst.append(i)
         
     pwd_dict={"admin_pwd":Tpwd_lst[0].decode('utf-8') ,"database_pwd":Tpwd_lst[1].decode('utf-8') ,"super_password":Tpwd_lst[2].decode('utf-8') }
-    pwd_lst.clear()
+    Tpwd_lst.clear()
+    
+#====================================================================================================================
+def dbLogQry(qry):
+
+    f=open("dbLog.txt",'a')
+    f.write(qry)
+    f.write("\n")
+    f.close
     
 #====================================================================================================================
 def root():
@@ -137,12 +145,16 @@ def accountLogin():
     def checkNopen():
         acno=tb1.get()  # Variable : Account Number
         acs=[]
-        csr.execute("select ac_no from account")
+        q1="select ac_no from account"
+        csr.execute(q1)
+        dbLogQry(q1)
         for i in csr:
             acs.append(i[0])   
         if 'BAC-'+acno in acs:
             acs.clear()
-            csr.execute("select * from account where ac_no=\"bac-"+acno+"\"")
+            q2="select * from account where ac_no=\"bac-"+acno+"\""
+            csr.execute(q2)
+            dbLogQry(q2)
             for i in csr:
                 acdet=i  # Variable : Account Details
             accountDisplay(acdet)           
@@ -211,18 +223,24 @@ def acWithdraw(acdet):
     def proceedWithdraw():
         
         def dbOperations():
-            mode=tbmode.get() # Variable : transaction Mode 
-            csr.execute("select max(trans_id) from transaction")
+            mode=tbmode.get() # Variable : transaction Mode
+            q0="select max(trans_id) from transaction"
+            csr.execute(q0)
+            dbLogQry(q0)
             for i in csr:
                 atid=int(i[0])+1  # Variable : Allocated Transaction ID
             q1="insert into transaction values (\""+str(atid)+"\",curdate(),\""+acdet[0]+"\",\""+mode+"\","+amt+",\"d\")"
             q2="update account set ac_balance="+str(acdet[3]-int(amt))+" where ac_no=\""+acdet[0]+"\""
             csr.execute(q1)
-            csr.execute(q2)            
+            csr.execute(q2)
+            dbLogQry(q1)
+            dbLogQry(q2)
             db.commit()
             q1=q2=0
 
-            csr.execute("select * from transaction where trans_id=\""+str(atid)+"\"")
+            q3="select * from transaction where trans_id=\""+str(atid)+"\""
+            csr.execute(q3)
+            dbLogQry(q3)
             for i in csr :
                 trans_data=i # Variable : Transaction Data
             global root
@@ -294,17 +312,22 @@ def acDeposit(acdet):
         
         def dbOperations():
             mode=tbmode.get()
-            csr.execute("select max(trans_id) from transaction")
+            q0="select max(trans_id) from transaction"
+            csr.execute(q0)
+            dbLogQry(q0)
             for i in csr:
                 atid=int(i[0])+1 # Variable : Allocated Transaction ID
             q1="insert into transaction values (\""+str(atid)+"\",curdate(),\""+acdet[0]+"\",\""+mode+"\","+amt+",\"c\")"
             q2="update account set ac_balance="+str(acdet[3]+int(amt))+" where ac_no=\""+acdet[0]+"\""
             csr.execute(q1)
-            csr.execute(q2)            
+            csr.execute(q2)
+            dbLogQry(q1)
+            dbLogQry(q2)
             db.commit()
             q1=q2=0
-
-            csr.execute("select * from transaction where trans_id=\""+str(atid)+"\"")
+            q3="select * from transaction where trans_id=\""+str(atid)+"\""
+            csr.execute(q3)
+            dbLogQry(q3)
             for i in csr :
                 trans_data=i    # Variable : Transaction data
             global root
@@ -436,11 +459,14 @@ def admin_findAccount():
     def db_searchAcNo():
         acno=tb1.get()
         acs, acdet=[],[]
-        csr.execute("select ac_no from account")
+        q1="select ac_no from account"
+        csr.execute(q1)
+        dbLogQry(q1)
         for i in csr:
             acs.append(i[0])
-            
-        csr.execute("select * from account where ac_no=\"bac-"+acno+"\"")
+        q2="select * from account where ac_no=\"bac-"+acno+"\""    
+        csr.execute(q2)
+        dbLogQry(q2)
         for i in csr:
             acdet=i
         closeWindow()
@@ -465,11 +491,15 @@ def admin_findAccount():
     def db_searchName():
         achn=(tb1.get()).lower()
         acs,acdet=[],[]
-        csr.execute("select ac_holder from account")
+        q1="select ac_holder from account"
+        csr.execute(q1)
+        dbLogQry(q1)
         for i in csr:
             acs.append(i[0].lower())
 
-        csr.execute("select * from account where ac_holder like \"%"+achn+"%\"")
+        q2="select * from account where ac_holder like \"%"+achn+"%\""
+        csr.execute(q2)
+        dbLogQry(q2)
         for i in csr:
             acdet.append(i)
         closeWindow()
@@ -498,11 +528,15 @@ def admin_findAccount():
         except:
             errorWindow('Invalid Mobile Number Format')   
         acs,acdet=[],[]
-        csr.execute("select ph_no from account")
+        q1="select ph_no from account"
+        csr.execute(q1)
+        dbLogQry(q1)
         for i in csr:
             acs.append(i[0])
 
-        csr.execute("select * from account where ph_no = "+str(acpn))
+        q2="select * from account where ph_no = "+str(acpn)
+        csr.execute(q2)
+        dbLogQry(q2)
         for i in csr:
             acdet.append(i)
         closeWindow()
@@ -550,13 +584,17 @@ def admin_CreateAccount():
     def createAC():
         name=tb1.get()
         phno=tb2.get()
-        csr.execute("select max(ac_no) from account")
+        q1="select max(ac_no) from account"
+        csr.execute(q1)
+        dbLogQry(q1)
         for i in csr:
             nacno=i[0][4:]
             nacno=int(nacno)+1
             
-        phnol=[]    
-        csr.execute("select ph_no from account")
+        phnol=[]
+        q2="select ph_no from account"
+        csr.execute(q2)
+        dbLogQry(q2)
         for i in csr:
             phnol.append(i[0])
             
@@ -568,7 +606,9 @@ def admin_CreateAccount():
                 errorWindow("Invalied Phone Number")
 
             else:
-                csr.execute('insert into account values(\"BAC-'+str(nacno)+"\",\""+name+"\","+phno+",0,\"O\",curdate())")
+                q='insert into account values(\"BAC-'+str(nacno)+"\",\""+name+"\","+phno+",0,\"O\",curdate())"
+                csr.execute(q)
+                dbLogQry(q)
                 db.commit()
                 closeWindow()        
                 global root
