@@ -8,22 +8,23 @@ print("""If any Error occur before printing \"All Modules Found\",
               \" python -m pip install  tabulate\"
           """)
 
+print("="*100+"\n  All Modules Found   \n"+"="*100)
 import tkinter as tk    #importing module
 import mysql.connector
 import pickle
 from cryptography.fernet import Fernet
 from tabulate import tabulate
 
-try:
-    pwd=input("Enter Database Password :")
-    db=mysql.connector.connect(host="localhost",user="root",passwd=pwd)
-    csr=db.cursor()
+#try:
+pwd=input("Enter Database Password :")
+db=mysql.connector.connect(host="localhost",user="root",passwd=pwd)
+csr=db.cursor()
 
-except:
-    print("Setup Error")
-    exit()
+#except:
+    #print("Setup Error")
+    #exit()
     
-print("="*100+"\n  All Modules Found   \n"+"="*100)
+
 
 ent=input("Press Enter to - Start Database setup")
 csr.execute("Create Database bankms")
@@ -40,7 +41,7 @@ trans_type varchar(2) not null);""")
 print("Table-2 Created")
 
 csr.execute("""insert into account values("BAC-10001","Test","1234567890",0,'O',curdate());""")
-csr.execute("""insert into transaction values("2420001",curdate(),"BAC-00001","deposit",0,"c"); """)
+csr.execute("""insert into transaction values("2420001",curdate(),"BAC-10001","deposit",0,"c"); """)
 db.commit()
 
 print("Traial Data Added")
@@ -54,17 +55,26 @@ for i in csr:
 
 print("\nChecking for Data retriving")
 
-if(dra[0]=='BAC-00001' and dra[1]=='Test'and dra[2]=="1234567890"):
+if(dra[0]=='BAC-10001' and dra[1]=='Test'and dra[2]=="1234567890"):
     print("Check-1 : status : SUCESS")
     ts=1
 else:
     print("Check-1 : status : Failed")
     ts=0
      
-if(drt[0]=='2420001' and drt[2]=='BAC-00001'):
-    print("Check-1 : status : SUCESS")
+if(drt[0]=='2420001' and drt[2]=='BAC-10001'):
+    print("Check-2 : status : SUCESS")
     ts=1
 else:
     print("Check-2 : status : Failed")
     ts=0
 
+
+f=open("dbLog.txt","w")
+f.close()
+
+try:
+    f=open("dbLog.txt","r")
+    print("Check-3 : status : SUCESS : FileFound")
+except:
+    print("Check-3 : status : FAILED : FileNotFound")
